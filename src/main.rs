@@ -1,15 +1,12 @@
 #![allow(non_snake_case)]
-mod configs;
 mod command;
+mod configs;
 #[macro_use]
 extern crate ini;
 use serenity::{
     async_trait,
     model::{
-        application::{
-            command::{ CommandOptionType},
-            interaction::Interaction,
-        },
+        application::{command::CommandOptionType, interaction::Interaction},
         gateway::Ready,
         id::GuildId,
     },
@@ -52,10 +49,10 @@ impl EventHandler for Handler
     {
         println!("{} is connected!", ready.user.name);
 
-        match app_commands!(ctx){
+        match app_commands!(ctx)
+        {
             Ok(_) => (),
             Err(x) => eprintln!("Error {}", x),
         };
-
     }
 }

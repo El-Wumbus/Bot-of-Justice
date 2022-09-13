@@ -1,5 +1,5 @@
 use once_cell::sync::Lazy;
-use std::{env, collections::HashMap};
+use std::{collections::HashMap, env};
 
 pub static CONFIG: once_cell::sync::Lazy<Config> = Lazy::new(|| Config::parse());
 

@@ -11,22 +11,31 @@ use serenity::{
 #[macro_export]
 macro_rules! app_commands {
     ($ctx:expr) => {
-      GuildId::set_application_commands(&GuildId(configs::CONFIG.server), &$ctx.http, |commands| {
-        commands
-            .create_application_command(|command| {
-                command.name("ping").description("A ping command, It responds if commands work.")
-            })
-            .create_application_command(|command| {
-                command.name("id").description("Get a user id").create_option(|option| {
-                    option
-                        .name("id")
-                        .description("The user to lookup")
-                        .kind(CommandOptionType::User)
-                        .required(true)
-                })
-            })
-    })
-    .await
+        GuildId::set_application_commands(
+            &GuildId(configs::CONFIG.server),
+            &$ctx.http,
+            |commands| {
+                commands
+                    .create_application_command(|command| {
+                        command
+                            .name("ping")
+                            .description("A ping command, It responds if commands work.")
+                    })
+                    .create_application_command(|command| {
+                        command
+                            .name("id")
+                            .description("Get a user id")
+                            .create_option(|option| {
+                                option
+                                    .name("id")
+                                    .description("The user to lookup")
+                                    .kind(CommandOptionType::User)
+                                    .required(true)
+                            })
+                    })
+            },
+        )
+        .await
     };
 }
 
