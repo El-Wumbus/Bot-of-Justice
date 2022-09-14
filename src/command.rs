@@ -8,6 +8,12 @@ use serenity::{
     prelude::Context,
 };
 
+use super::extentions::{
+    conversions::{
+        temp,
+    }
+};
+
 #[macro_export]
 macro_rules! app_commands {
     ($ctx:expr) => {
@@ -30,6 +36,25 @@ macro_rules! app_commands {
                                     .name("id")
                                     .description("The user to lookup")
                                     .kind(CommandOptionType::User)
+                                    .required(true)
+                            })
+                    })
+                    .create_application_command(|command| {
+                        command
+                            .name("temp")
+                            .description("Convert from one temperature unit to another")
+                            .create_option(|option| {
+                                option
+                                    .name("value")
+                                    .description("Original value (e.g. '65F' [Fahrenheit], '18.33C' [Celsius].")
+                                    .kind(CommandOptionType::String)
+                                    .required(true)
+                            })
+                            .create_option(|option| {
+                                option
+                                    .name("target")
+                                    .description("The unit to target. (e.g 'F' [Fahrenheit], 'C' [Celsius]).")
+                                    .kind(CommandOptionType::String)
                                     .required(true)
                             })
                     })
@@ -64,29 +89,31 @@ pub async fn run(ctx: Context, command: ApplicationCommandInteraction)
                 "Please provide a valid user".to_string()
             }
         }
-        "attachmentinput" =>
-        {
-            let options = command
-                .data
-                .options
-                .get(0)
-                .expect("Expected attachment option")
-                .resolved
-                .as_ref()
-                .expect("Expected attachment object");
 
-            if let CommandDataOptionValue::Attachment(attachment) = options
+        "temp" => 
+        {
+            let mut value:String = String::new();
+            let mut target:char = '\0';
+
+            if command.data.options.len() < 2
             {
-                format!(
-                    "Attachment name: {}, attachment size: {}",
-                    attachment.filename, attachment.size
-                )
+                panic!("Expected User Arguments '[Value] [Target]'")
             }
-            else
+
+
+            if let CommandDataOptionValue::String(_value) = command.data.options[0].resolved.as_ref().expect("Expected User Object")
             {
-                "Please provide a valid attachment".to_string()
+                value = _value.clone();
             }
+
+            if let CommandDataOptionValue::String(_value) = command.data.options[1].resolved.as_ref().expect("Expected User Object")
+            {
+                target = _value.chars().last().unwrap();
+            }
+            temp::run(value, target)
+
         }
+
         _ => "not implemented :(".to_string(),
     };
 
