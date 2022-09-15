@@ -8,11 +8,7 @@ use serenity::{
     prelude::Context,
 };
 
-use super::extentions::{
-    conversions::{
-        temp,
-    }
-};
+use super::extentions::{conversions::temp, wiki::wiki};
 
 #[macro_export]
 macro_rules! app_commands {
@@ -58,6 +54,26 @@ macro_rules! app_commands {
                                     .required(true)
                             })
                     })
+                    .create_application_command(|command|
+                    {
+                        command
+                            .name("wiki")
+                            .description("Get a summary of a topic from wikipedia.org.")
+                            .create_option(|option| {
+                                option
+                                .name("search_term")
+                                .description("The term (or wikipedia page id) to search wikipedia.org for.")
+                                .kind(CommandOptionType::String)
+                                .required(true)
+                            })
+                            .create_option(|option|{
+                                option
+                                .name("use_id")
+                                .description("Is the search term a wikipedia.org id? [default: false]")
+                                .kind(CommandOptionType::Boolean)
+                                .required(false)
+                            })
+                    })
             },
         )
         .await
@@ -90,31 +106,61 @@ pub async fn run(ctx: Context, command: ApplicationCommandInteraction)
             }
         }
 
-        "temp" => 
+        "temp" =>
         {
-            let mut value:String = String::new();
-            let mut target:char = '\0';
+            let mut value: String = String::new();
+            let mut target: char = '\0';
 
             if command.data.options.len() < 2
             {
                 panic!("Expected User Arguments '[Value] [Target]'")
             }
 
-
-            if let CommandDataOptionValue::String(_value) = command.data.options[0].resolved.as_ref().expect("Expected User Object")
+            if let CommandDataOptionValue::String(_value) = command.data.options[0]
+                .resolved
+                .as_ref()
+                .expect("Expected User Object")
             {
                 value = _value.clone();
             }
 
-            if let CommandDataOptionValue::String(_value) = command.data.options[1].resolved.as_ref().expect("Expected User Object")
+            if let CommandDataOptionValue::String(_value) = command.data.options[1]
+                .resolved
+                .as_ref()
+                .expect("Expected User Object")
             {
                 target = _value.chars().last().unwrap();
             }
             temp::run(value, target)
+        }
+        "wiki" =>
+        {
+            let mut search_term: String = String::new();
+            let mut use_id: bool = false;
 
+            if let CommandDataOptionValue::String(_value) = command.data.options[0]
+                .resolved
+                .as_ref()
+                .expect("Expected User Object")
+            {
+                search_term = _value.clone();
+            }
+
+            if command.data.options.len() > 1
+            {
+                if let CommandDataOptionValue::Boolean(_value) = command.data.options[1]
+                    .resolved
+                    .as_ref()
+                    .expect("Expected User Object")
+                {
+                    use_id = *_value;
+                }
+            }
+
+            wiki::run(search_term, use_id)
         }
 
-        _ => "not implemented :(".to_string(),
+        _ => "not a thing, bozo 🤓.".to_string(),
     };
 
     if let Err(why) = command
