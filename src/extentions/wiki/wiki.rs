@@ -12,13 +12,13 @@ fn wiki_summary(id: String) -> String
         .get_summary()
     {
         Ok(x) => {
-            if x.len() < 2000
+            if x.len() > 2000
             {
                 return "Error: Wiki Summary surpasses discord's 2000 character limit (Bad, or non-existant, summary section.)".to_string();
             }
         x
         },
-        Err(x) => format!("Error: {}", x),
+        Err(x) => return format!("Error: {}", x),
     }
 }
 
