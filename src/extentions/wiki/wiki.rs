@@ -9,26 +9,24 @@ fn wiki_summary(id: String) -> String
 {
     let handle = wikipedia::Wikipedia::<wikipedia::http::hyper::Client>::default();
     let page = handle.page_from_pageid(id);
-
     let content = match page.get_summary()
     {
         Ok(x) => x,
         Err(x) => format!("Error: {}", x),
     };
 
-    if !content.len() >= 2000
+    if content.len() >= 2000
     {
-        return content;
-    }
-
-    match page.get_title()
-    {
-        Ok(x) =>
+        return match page.get_title()
         {
-            format!("Error: Wiki Summary surpasses discord's 2000 character limit.\nhttps://en.wikipedia.org/wiki/{}",x.trim().replace(" ", "_"))
-        }
-        Err(x) => format!("Error: {}", x),
+            Ok(x) =>
+            {
+                format!("Error: Wiki Summary surpasses discord's 2000 character limit.\nhttps://en.wikipedia.org/wiki/{}",x.trim().replace(" ", "_"))
+            }
+            Err(x) => format!("Error: {}", x),
+        };
     }
+    content
 }
 
 fn get_wiki_id(search_term: String, id: bool) -> String
