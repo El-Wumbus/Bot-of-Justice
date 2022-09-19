@@ -14,3 +14,4 @@ once_cell  = "*"
 
 # Extention Dependencies
 wikipedia = {git = "https://github.com/El-Wumbus/wikipedia-rs"}
+regex = "*"
