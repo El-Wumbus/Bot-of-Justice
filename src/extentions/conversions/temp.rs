@@ -1,43 +1,105 @@
 use serenity::{builder::CreateApplicationCommand, model::prelude::command::CommandOptionType};
 
-fn fah_to_cel(value: f64) -> f64 { (value - 32 as f64) / 1.8 }
-fn cel_to_fah(value: f64) -> f64 { (value * 1.8) + 32 as f64 }
+enum Temperature
+{
+    Kelvin(f64),
+    Celsius(f64),
+    Fahrenheit(f64),
+}
+
+impl From<Temperature> for f64
+{
+    fn from(item: Temperature) -> Self
+    {
+        match item
+        {
+            Temperature::Kelvin(x) => x,
+            Temperature::Celsius(x) => x,
+            Temperature::Fahrenheit(x) => x, 
+        }
+    }
+}
+
+impl Temperature
+{
+    pub fn to_fah(&self) -> Temperature
+    {
+        match *self
+        {
+            Self::Kelvin(x) => Self::Fahrenheit((1.8 * (x - 273.15)) + 32.0),
+            Self::Celsius(x) => Self::Fahrenheit(x * 1.8 + 32 as f64),
+            Self::Fahrenheit(x) => Self::Fahrenheit(x),
+        }
+    }
+    pub fn to_cel(&self) -> Temperature
+    {
+        match *self
+        {
+            Self::Kelvin(x) => Self::Celsius(x - 273.15),
+            Self::Fahrenheit(x) => Self::Celsius((x - 32.0) / 1.8),
+            Self::Celsius(x) => Self::Celsius(x),
+        }
+    }
+    pub fn to_kel(&self) -> Temperature
+    {
+        match *self
+        {
+            Self::Fahrenheit(x) => Self::Kelvin(((x - 32.0) / 1.8) + 273.15),
+            Self::Celsius(x) => Self::Kelvin(x + 273.15),
+            Self::Kelvin(x) => Self::Kelvin(x),
+        }
+    }
+}
 
 pub fn run(value: String, target: char) -> String
 {
     let mut value = value;
     let last = value.clone().chars().last().unwrap();
+    let conval: Temperature;
+    let ret: f64;
+    value.pop();
 
     match last
     {
         'C' | 'c' =>
         {
-            if target == 'C' || target == 'c'
-            {
-                return String::from(value);
-            }
+            conval = Temperature::Celsius(value.parse().unwrap_or(0.0));
         }
 
         'F' | 'f' =>
         {
-            if target == 'F' || target == 'f'
-            {
-                return String::from(value);
-            }
+            conval = Temperature::Fahrenheit(value.parse().unwrap_or(0.0));
         }
 
-        _ => return "Error: No unit specified".to_string(),
+        'K' | 'k' =>
+        {
+            conval = Temperature::Kelvin(value.parse().unwrap_or(0.0));
+        }
+
+        _ => return "Error: No viable unit specified".to_string(),
     }
 
-    value.pop();
-    return parse_value(value, target);
+    ret = match target
+    {
+        'F' | 'f' => f64::from(conval.to_fah()),
+        'C' | 'c' => f64::from(conval.to_cel()),
+        'K' | 'k' => f64::from(conval.to_kel()),
+        _ => return "Error: No viable target specified".to_string(),
+    };
+
+    if f64::from(conval) == 0.0
+    {
+        return "Error: not a parseable number!".to_string();
+    }
+
+    format!("{:.1}{}", ret, target)
 }
 
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand
 {
     command
         .name("temp")
-        .description("Convert from one temperature unit to another")
+        .description("Convert from one temperature unit to another. Supports Kelvin, Fahrenheit, and Celcius")
         .create_option(|option| {
             option
                 .name("value")
@@ -48,40 +110,8 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
         .create_option(|option| {
             option
                 .name("target")
-                .description("The unit to target. (e.g 'F' [Fahrenheit], 'C' [Celsius]).")
+                .description("The unit to target. (e.g 'F' [Fahrenheit], 'K' [kelvin]).")
                 .kind(CommandOptionType::String)
                 .required(true)
         })
-}
-
-fn parse_value(value: String, conversion: char) -> String
-{
-    let value: f64 = match value.parse()
-    {
-        Ok(x) =>
-        {
-            let val: f64;
-            match conversion
-            {
-                'C' | 'c' =>
-                {
-                    val = fah_to_cel(x);
-                }
-                'F' | 'f' =>
-                {
-                    val = cel_to_fah(x);
-                }
-                _ => val = 0 as f64,
-            }
-            val
-        }
-        Err(_) => 0 as f64,
-    };
-
-    if value == 0 as f64
-    {
-        return "Error: not a parseable number!".to_string();
-    }
-
-    return format!("{:.1}{}", value, conversion);
 }

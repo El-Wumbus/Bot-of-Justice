@@ -15,7 +15,7 @@ use serenity::{
 
 const AUTHOR:&str = "Decator";
 const GITHUB:&str = "https://github.com/El-Wumbus/Bot-of-Justice";
-const VERSION:&str = "0.2.2";
+const VERSION:&str = "0.2.3";
 
 #[tokio::main]
 async fn main()

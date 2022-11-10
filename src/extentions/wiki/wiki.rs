@@ -58,11 +58,11 @@ fn wiki_summary(id: String) -> String
 
     if content.len() >= max
     {
-        content = content.truncate_to_boundary(max).to_string();
+        content = format!("{}...", content.truncate_to_boundary(max));
     }
 
     format!(
-        "{}...\nhttps://en.wikipedia.org/wiki/{}",
+        "{}\nhttps://en.wikipedia.org/wiki/{}",
         content,
         title.trim().replace(" ", "_")
     )
