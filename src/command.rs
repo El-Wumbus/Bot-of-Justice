@@ -22,7 +22,7 @@ pub async fn run(ctx: Context, command: ApplicationCommandInteraction)
 {
     let content = match command.data.name.as_str()
     {
-        "ping" => "LMR Bot is alive".to_string(),
+        "ping" => "Bot is alive".to_string(),
         "id" =>
         {
             let options = command

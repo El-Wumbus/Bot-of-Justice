@@ -15,13 +15,13 @@ use serenity::{
 };
 
 const AUTHOR:&str = "Decator";
-const GITHUB:&str = "https://github.com/el-wumbus/...";
+const GITHUB:&str = "https://github.com/El-Wumbus/Bot-of-Justice";
 const VERSION:&str = "0.2.0";
 
 #[tokio::main]
 async fn main()
 {
-    println!("Starting BOJ (Bot of Justice) Version {}. Written by {}. See the source code at '{}'", AUTHOR, GITHUB, VERSION) ;
+    println!("Starting BOJ (Bot of Justice) Version {}.\nWritten by {}. See the source code at '{}'",VERSION, AUTHOR, GITHUB) ;
     // Build client.
     let mut client = Client::builder(
         configs::CONFIG.token.clone(),
