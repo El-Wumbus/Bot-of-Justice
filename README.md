@@ -1,4 +1,4 @@
-# LMR Bot
+# Bot of Justice
 
 A Wonderful Discord Bot for a Wonderful Discord Server.
 Written in rust.
@@ -6,5 +6,5 @@ Written in rust.
 ## TODO
 
 * [x] Wiki command
-* [ ] `author` - Link the author and stuff
+* [x] `author` - Link the author and stuff
 * [ ] `currency` - Convert to an from currencies

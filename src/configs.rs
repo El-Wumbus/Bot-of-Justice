@@ -53,15 +53,18 @@ impl Config
         .parse()
         .expect("Provided Server isn't a positive integer value!");
         
-        let exchange_api_key = match env::var("DISCORD_EXCHANGE_API_KEY")
-        {
-            Ok(x) => x,
-            Err(_) => match parse_config(&config_file)["keys"]["exchange"].clone()
-            {
-                Some(x) => x,
-                None => String::from(""),
-            },
-        };
+        let exchange_api_key = 
+        // later, okay
+        // match env::var("DISCORD_EXCHANGE_API_KEY")
+        // {
+        //     Ok(x) => x,
+        //     Err(_) => match parse_config(&config_file)["keys"]["exchange"].clone()
+        //     {
+        //         Some(x) => x,
+        //         None => String::from(""),
+        //     },
+        // };
+        String::new();
 
         
         Config 
