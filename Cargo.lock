@@ -150,7 +150,7 @@ dependencies = [
 
 [[package]]
 name = "bot_of_justice"
-version = "0.1.0"
+version = "0.2.2"
 dependencies = [
  "currency_rs",
  "once_cell",
