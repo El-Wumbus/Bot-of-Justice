@@ -67,9 +67,9 @@ impl EventHandler for Handler
         };
 
         // I don't know a better way to do this
-        Command::set_global_application_commands(
-            // &GuildId(configs::CONFIG.server),
-            &ctx,
+       GuildId::set_application_commands(
+            &server,
+            ctx,
             |commands| {
                 commands
                 .create_application_command(|command| {
