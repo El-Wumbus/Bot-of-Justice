@@ -1,78 +1,97 @@
 use once_cell::sync::Lazy;
-use std::{collections::HashMap, env};
+use serde::Serialize;
+use std::{env, fs::{read_to_string, write}, path::PathBuf, io::{stdin, stdout, Write}};
+use serde_derive::Deserialize;
+pub static CONFIG: once_cell::sync::Lazy<Config> = Lazy::new(||Config::parse());
 
-pub static CONFIG: once_cell::sync::Lazy<Config> = Lazy::new(|| Config::parse());
-
+#[derive(Deserialize, Serialize)]
 pub struct Config
 {
     pub token: String,
     pub server: u64,
-    pub exchange_api_key: String,
-    pub options: ConfigurationOptions
+    pub keys: Option<Keys>,
+    pub behavior: Option<Behavior>,
 }
 
-pub struct ConfigurationOptions
-{}
+#[derive(Deserialize, Serialize)]
+pub struct Keys
+{
+    pub exchange_rate_api_key: Option<String>
+}
+
+#[derive(Serialize)]
+#[derive(Deserialize)]
+pub struct Behavior
+{
+    pub max_wiki_output: Option<usize>,
+}
 
 impl Config
 {
     pub fn parse() -> Config
     {
-        let token: String;
-        let server: u64;
-
         // Allow for changing config file location
-        let config_file: String = match env::var("PMR_CONFIG")
+        let config_file: PathBuf = match env::var("DISCORD_CONFIG")
         {
-            Ok(x) => x,
-            Err(_) => String::from("/etc/boj.conf"),
-        };
-        let parse_config = |config_file: &str| -> HashMap<String, HashMap<String, Option<String>>> {
-            ini!(config_file)
+            Ok(x) => PathBuf::from(x),
+            Err(_) => PathBuf::from("/etc/boj.conf"),
         };
 
-        token = match env::var("DISCORD_TOKEN")
+        if !config_file.exists()
         {
-            Ok(x) => x,
-            Err(_) => match parse_config(&config_file)["bot"]["token"].clone()
+            let id: u64;
+            println!("First Time Setup");
+            loop
             {
-                Some(x) => x,
-                None => String::from(""),
-            },
+                print!("Enter your server id: ");
+                stdout().flush().unwrap();
+                let mut input:String = String::new();
+                stdin().read_line(&mut input).unwrap();
+                match input.trim().parse() {
+                    Ok(x) => {
+                        id = x;
+                        
+                        break;
+                    },
+                    Err(_) => {
+                        println!("Not a proper id, try again!");
+                        continue;
+                    },
+                };
+            }
+         
+            print!("Enter your bot's token: ");
+            stdout().flush().unwrap();
+            let mut input:String = String::new();
+            stdin().read_line(&mut input).unwrap();
+            let token: String = input;
+
+            
+            let config = Config {
+                token,
+                server: id,
+                keys: Some(Keys{exchange_rate_api_key:None}),
+                behavior: Some(Behavior { max_wiki_output: None }),
+            };
+
+            let toml = toml::to_string(&config).unwrap();
+            write(config_file.clone(), toml).unwrap();
+        }
+
+        let mut parsed:Config = toml::from_str(&read_to_string(config_file).unwrap()).unwrap();
+
+        match env::var("DISCORD_TOKEN")
+        {
+            Ok(x) => parsed.token = x,
+            Err(_) => (),
         };
 
-        server = match env::var("DISCORD_SERVER")
+        match env::var("DISCORD_SERVER")
         {
-            Ok(x) => x,
-            Err(_) => match parse_config(&config_file)["bot"]["server"].clone()
-            {
-                Some(x) => x,
-                None => String::from("0"),
-            },
-        }
-        .parse()
-        .expect("Provided Server isn't a positive integer value!");
+            Ok(x) => parsed.server = x.parse().expect("Provided Server isn't a positive integer value!"),
+            Err(_) => (),
+        };
         
-        let exchange_api_key = 
-        // later, okay
-        // match env::var("DISCORD_EXCHANGE_API_KEY")
-        // {
-        //     Ok(x) => x,
-        //     Err(_) => match parse_config(&config_file)["keys"]["exchange"].clone()
-        //     {
-        //         Some(x) => x,
-        //         None => String::from(""),
-        //     },
-        // };
-        String::new();
-
-        
-        Config 
-        {
-            token,
-            server,
-            exchange_api_key,
-            options:ConfigurationOptions{ },
-        }
+        parsed
     }
 }

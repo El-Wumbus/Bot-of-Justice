@@ -1,6 +1,19 @@
+use once_cell::sync::Lazy;
 use serenity::{builder::CreateApplicationCommand, model::prelude::command::CommandOptionType};
+use crate::configs::*;
 use truncrate::*;
 use wikipedia;
+
+static MAX: Lazy<usize> = Lazy::new(init);
+
+fn init() -> usize
+{
+    match &CONFIG.behavior
+    {
+        None => 600,
+        Some(x) => x.max_wiki_output.unwrap_or(600),
+    }
+}
 
 pub fn run(search_term: String, id: bool) -> String
 {
@@ -33,7 +46,7 @@ fn wiki_summary(id: String) -> String
     let handle = wikipedia::Wikipedia::<wikipedia::http::hyper::Client>::default();
     let page = handle.page_from_pageid(id);
 
-    let mut content = match page.get_summary()
+    let content = match page.get_summary()
     {
         Ok(x) => x,
         Err(x) => format!("Error: {}", x),
@@ -44,13 +57,11 @@ fn wiki_summary(id: String) -> String
         Ok(x) => x,
         Err(x) => return format!("Error: {}", x),
     };
-
-    if content.len() >= 400
+    
+    if content.len() >= MAX.to_owned()
     {
-        content = format!(
-            "{}...\nError: Wiki Summary surpasses imposed character limit.",
-            content.truncate_to_boundary(340)
-        );
+       
+        content.truncate_to_boundary(MAX.to_owned()).to_string();
     }
 
     format!(

@@ -1,5 +1,3 @@
-use std::{fs::read_to_string, path::Path};
-
 use serenity::{
     model::{
         application::interaction::application_command::CommandDataOptionValue,
@@ -11,11 +9,9 @@ use serenity::{
 };
 
 use super::extentions::{conversions::temp, wiki::wiki};
-use crate::extentions::meta::license::*;
+use crate::extentions::meta::{license::*, self};
 use crate::{
-    command,
     extentions::randomize::random_choice::{coin, roulette},
-    extentions::conversions
 };
 
 pub async fn run(ctx: Context, command: ApplicationCommandInteraction)
@@ -121,6 +117,8 @@ pub async fn run(ctx: Context, command: ApplicationCommandInteraction)
         }
         .to_string(),
 
+        "info" => meta::info::run(),
+        
         _ => "not a thing, bozo 🤓.\nL + nerd".to_string(),
     };
 

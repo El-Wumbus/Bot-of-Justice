@@ -2,14 +2,13 @@
 mod command;
 mod extentions;
 mod configs;
-#[macro_use]
-extern crate ini;
+
+use extentions::*;
 use serenity::{
     async_trait,
     model::{
         application::{command::CommandOptionType, interaction::Interaction},
-        gateway::Ready,
-        id::GuildId,
+        gateway::Ready, prelude::command::Command,
     },
     prelude::*,
 };
@@ -55,8 +54,15 @@ impl EventHandler for Handler
     {
         println!("{} is connected!", ready.user.name);
 
-        let commands = GuildId::set_application_commands(
-            &GuildId(configs::CONFIG.server),
+        
+        for cmd in Command::get_global_application_commands(ctx.clone()).await.unwrap()
+        {
+            let _ = Command::delete_global_application_command(ctx.clone(), cmd.id).await;
+        }
+
+        // I don't know a better way to do this
+        Command::set_global_application_commands(
+            // &GuildId(configs::CONFIG.server),
             &ctx,
             |commands| {
                 commands
@@ -77,13 +83,15 @@ impl EventHandler for Handler
                                 .required(true)
                         })
                 })
-                .create_application_command(|command| extentions::conversions::temp::register(command))
-                .create_application_command(|command| extentions::meta::info::register(command))
-                .create_application_command(|command| extentions::meta::license::register(command))
-                .create_application_command(|command| extentions::randomize::random_choice::coin::register(command))
-                .create_application_command(|command| extentions::randomize::random_choice::roulette::register(command))
+                .create_application_command(|command| conversions::temp::register(command))
+                .create_application_command(|command| meta::info::register(command))
+                .create_application_command(|command| meta::license::register(command))
+                .create_application_command(|command| randomize::random_choice::coin::register(command))
+                .create_application_command(|command| randomize::random_choice::roulette::register(command))
+                .create_application_command(|command| wiki::wiki::register(command))
             },
         )
-        .await;
+        .await.unwrap();
+        
     }
 }

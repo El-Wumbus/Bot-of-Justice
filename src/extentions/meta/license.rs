@@ -22,12 +22,12 @@ impl License {
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand
 {
     command
-        .name("license")
+        .name("linfo")
         .description("Print info about software licenses")
         .create_option(|option|
         {
             option
-                .name("License")
+                .name("license")
                 .description("The license to print info about")
                 .kind(CommandOptionType::String)
                 .required(true)
