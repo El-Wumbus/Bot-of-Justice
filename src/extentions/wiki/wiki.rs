@@ -62,7 +62,7 @@ fn wiki_summary(id: String) -> String
     }
 
     format!(
-        "{}\nhttps://en.wikipedia.org/wiki/{}...",
+        "{}...\nhttps://en.wikipedia.org/wiki/{}",
         content,
         title.trim().replace(" ", "_")
     )
