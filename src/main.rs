@@ -14,11 +14,14 @@ use serenity::{
     prelude::*,
 };
 
-
+const AUTHOR:&str = "Decator";
+const GITHUB:&str = "https://github.com/el-wumbus/...";
+const VERSION:&str = "0.2.0";
 
 #[tokio::main]
 async fn main()
 {
+    println!("Starting BOJ (Bot of Justice) Version {}. Written by {}. See the source code at '{}'", AUTHOR, GITHUB, VERSION) ;
     // Build client.
     let mut client = Client::builder(
         configs::CONFIG.token.clone(),
@@ -52,10 +55,35 @@ impl EventHandler for Handler
     {
         println!("{} is connected!", ready.user.name);
 
-        match app_commands!(ctx)
-        {
-            Ok(_) => (),
-            Err(x) => eprintln!("Error {}", x),
-        };
+        let commands = GuildId::set_application_commands(
+            &GuildId(configs::CONFIG.server),
+            &ctx,
+            |commands| {
+                commands
+                .create_application_command(|command| {
+                    command
+                        .name("ping")
+                        .description("A ping command, It responds if commands work.")
+                })
+                .create_application_command(|command| {
+                    command
+                        .name("id")
+                        .description("Get a user id")
+                        .create_option(|option| {
+                            option
+                                .name("id")
+                                .description("The user to lookup")
+                                .kind(CommandOptionType::User)
+                                .required(true)
+                        })
+                })
+                .create_application_command(|command| extentions::conversions::temp::register(command))
+                .create_application_command(|command| extentions::meta::info::register(command))
+                .create_application_command(|command| extentions::meta::license::register(command))
+                .create_application_command(|command| extentions::randomize::random_choice::coin::register(command))
+                .create_application_command(|command| extentions::randomize::random_choice::roulette::register(command))
+            },
+        )
+        .await;
     }
 }

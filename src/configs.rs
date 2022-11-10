@@ -7,11 +7,16 @@ pub struct Config
 {
     pub token: String,
     pub server: u64,
+    pub exchange_api_key: String,
+    pub options: ConfigurationOptions
 }
+
+pub struct ConfigurationOptions
+{}
 
 impl Config
 {
-    fn parse() -> Config
+    pub fn parse() -> Config
     {
         let token: String;
         let server: u64;
@@ -20,13 +25,13 @@ impl Config
         let config_file: String = match env::var("PMR_CONFIG")
         {
             Ok(x) => x,
-            Err(_) => String::from("/etc/lmr.conf"),
+            Err(_) => String::from("/etc/boj.conf"),
         };
         let parse_config = |config_file: &str| -> HashMap<String, HashMap<String, Option<String>>> {
             ini!(config_file)
         };
 
-        token = match env::var("PMR_TOKEN")
+        token = match env::var("DISCORD_TOKEN")
         {
             Ok(x) => x,
             Err(_) => match parse_config(&config_file)["bot"]["token"].clone()
@@ -36,7 +41,7 @@ impl Config
             },
         };
 
-        server = match env::var("PMR_SERVER")
+        server = match env::var("DISCORD_SERVER")
         {
             Ok(x) => x,
             Err(_) => match parse_config(&config_file)["bot"]["server"].clone()
@@ -47,7 +52,24 @@ impl Config
         }
         .parse()
         .expect("Provided Server isn't a positive integer value!");
+        
+        let exchange_api_key = match env::var("DISCORD_EXCHANGE_API_KEY")
+        {
+            Ok(x) => x,
+            Err(_) => match parse_config(&config_file)["keys"]["exchange"].clone()
+            {
+                Some(x) => x,
+                None => String::from(""),
+            },
+        };
 
-        Config { token, server }
+        
+        Config 
+        {
+            token,
+            server,
+            exchange_api_key,
+            options:ConfigurationOptions{ },
+        }
     }
 }

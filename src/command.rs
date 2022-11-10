@@ -1,3 +1,5 @@
+use std::{fs::read_to_string, path::Path};
+
 use serenity::{
     model::{
         application::interaction::application_command::CommandDataOptionValue,
@@ -9,75 +11,67 @@ use serenity::{
 };
 
 use super::extentions::{conversions::temp, wiki::wiki};
+use crate::extentions::meta::license::*;
+use crate::{
+    command,
+    extentions::randomize::random_choice::{coin, roulette},
+    extentions::conversions
+};
 
-#[macro_export]
-macro_rules! app_commands {
-    ($ctx:expr) => {
-        GuildId::set_application_commands(
-            &GuildId(configs::CONFIG.server),
-            &$ctx.http,
-            |commands| {
-                commands
-                    .create_application_command(|command| {
-                        command
-                            .name("ping")
-                            .description("A ping command, It responds if commands work.")
-                    })
-                    .create_application_command(|command| {
-                        command
-                            .name("id")
-                            .description("Get a user id")
-                            .create_option(|option| {
-                                option
-                                    .name("id")
-                                    .description("The user to lookup")
-                                    .kind(CommandOptionType::User)
-                                    .required(true)
-                            })
-                    })
-                    .create_application_command(|command| {
-                        command
-                            .name("temp")
-                            .description("Convert from one temperature unit to another")
-                            .create_option(|option| {
-                                option
-                                    .name("value")
-                                    .description("Original value (e.g. '65F' [Fahrenheit], '18.33C' [Celsius].")
-                                    .kind(CommandOptionType::String)
-                                    .required(true)
-                            })
-                            .create_option(|option| {
-                                option
-                                    .name("target")
-                                    .description("The unit to target. (e.g 'F' [Fahrenheit], 'C' [Celsius]).")
-                                    .kind(CommandOptionType::String)
-                                    .required(true)
-                            })
-                    })
-                    .create_application_command(|command|
-                    {
-                        command
-                            .name("wiki")
-                            .description("Get a summary of a topic from wikipedia.org.")
-                            .create_option(|option| {
-                                option
-                                .name("search_term")
-                                .description("The term (or wikipedia page id) to search wikipedia.org for.")
-                                .kind(CommandOptionType::String)
-                                .required(true)
-                            })
-                            .create_option(|option|{
-                                option
-                                .name("use_id")
-                                .description("Is the search term a wikipedia.org id? [default: false]")
-                                .kind(CommandOptionType::Boolean)
-                                .required(false)
-                            })
-                    })
-            },
-        )
-        .await
-    };
+// fn parse_commands() -> Vec<Command>
+// {
+//     const COMMAND_JSON: &str = "/etc/boj/commands.json";
+
+//     let mut commands: Vec<Command> = Vec::new();
+//     let raw_json =
+//         read_to_string(COMMAND_JSON).expect("No command.json file found in /etc/boj/commands.json");
+//     let json = json::parse(raw_json.as_str()).unwrap();
+
+//     let cmdlen = json["commands"].len();
+//     let mut i: usize = 0;
+//     while i < cmdlen
+//     {
+//         let x = json["commands"][i].clone();
+//         let mut options: Vec<Option> = Vec::new();
+
+//         let mut e: usize = 0;
+//         while e < x["options"].len()
+//         {
+//             let y = x["options"][i].clone();
+//             options.push(Option {
+//                 name: y["name"].to_string(),
+//                 description: y["description"].to_string(),
+//                 kind: y["kind"].to_string(),
+//                 required: y["required"].as_bool().unwrap_or(true),
+//             });
+//             e += 0;
+//         }
+
+//         let command = Command {
+//             name: x["name"].to_string(),
+//             description: x["description"].to_string(),
+//             options,
+//         };
+
+//         commands.push(command);
+//         i += 1;
+//     }
+//     commands
+// }
+
+struct Option
+{
+    name: String,
+    description: String,
+    kind: String,
+    required: bool,
+}
+
+struct Command
+{
+    name: String,
+    description: String,
+    options: Vec<Option>,
 }
 
 pub async fn run(ctx: Context, command: ApplicationCommandInteraction)
@@ -160,7 +154,30 @@ pub async fn run(ctx: Context, command: ApplicationCommandInteraction)
             wiki::run(search_term, use_id)
         }
 
-        _ => "not a thing, bozo 🤓.".to_string(),
+        "coin" => coin::run(),
+
+        "roulette" => roulette::run(),
+
+        "license" | "licence" => if let CommandDataOptionValue::String(_value) =
+            command.data.options[1]
+                .resolved
+                .as_ref()
+                .expect("Expected User Object")
+        {
+            match _value.to_lowercase().as_str()
+            {
+                "gplv3" => License::GPLV2,
+                "mit" => License::MIT,
+                _ => "That license is not in our record 😭",
+            }
+        }
+        else
+        {
+            "Error!"
+        }
+        .to_string(),
+
+        _ => "not a thing, bozo 🤓.\nL + nerd".to_string(),
     };
 
     if let Err(why) = command
