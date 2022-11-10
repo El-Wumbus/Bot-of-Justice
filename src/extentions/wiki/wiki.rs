@@ -44,7 +44,7 @@ fn wiki_summary(id: String) -> String
         max = 1000
     }
 
-    let content = match page.get_summary()
+    let mut content = match page.get_summary()
     {
         Ok(x) => x,
         Err(x) => format!("Error: {}", x),
@@ -58,7 +58,7 @@ fn wiki_summary(id: String) -> String
 
     if content.len() >= max
     {
-        content.truncate_to_boundary(max).to_string();
+        content = content.truncate_to_boundary(max).to_string();
     }
 
     format!(
