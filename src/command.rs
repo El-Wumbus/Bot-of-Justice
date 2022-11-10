@@ -98,7 +98,7 @@ pub async fn run(ctx: Context, command: ApplicationCommandInteraction)
 
         "roulette" => roulette::run(),
 
-        "license" | "licence" => if let CommandDataOptionValue::String(_value) =
+        "linfo" => if let CommandDataOptionValue::String(_value) =
             command.data.options[1]
                 .resolved
                 .as_ref()
