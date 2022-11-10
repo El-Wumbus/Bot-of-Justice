@@ -3,7 +3,7 @@ use serenity::{builder::CreateApplicationCommand, model::prelude::command::Comma
 pub struct License;
 
 impl License {
-    pub const GPLV2:&str =
+    pub const GPLV2:&'static str =
         "Summary:\n You may copy, distribute and modify the software as long\"
         as you track changes/dates in source files.\"
         Any modifications to or software including (via compiler)\"
@@ -12,7 +12,7 @@ impl License {
         The license document can be found at \"
         'https://github.com/el-wumbus/Bot-of-Justice/blob/master/LICENSE'";
 
-    pub const MIT:&str =
+    pub const MIT:&'static str =
         "Basically, you can do whatever you want as long as you include\"
         the original copyright and license notice in any copy of the software/source.\"
         Full License document: https://tldrlegal.com/license/mit-license#fulltext";

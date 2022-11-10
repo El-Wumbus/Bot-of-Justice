@@ -18,62 +18,6 @@ use crate::{
     extentions::conversions
 };
 
-// fn parse_commands() -> Vec<Command>
-// {
-//     const COMMAND_JSON: &str = "/etc/boj/commands.json";
-
-//     let mut commands: Vec<Command> = Vec::new();
-//     let raw_json =
-//         read_to_string(COMMAND_JSON).expect("No command.json file found in /etc/boj/commands.json");
-//     let json = json::parse(raw_json.as_str()).unwrap();
-
-//     let cmdlen = json["commands"].len();
-//     let mut i: usize = 0;
-//     while i < cmdlen
-//     {
-//         let x = json["commands"][i].clone();
-//         let mut options: Vec<Option> = Vec::new();
-
-//         let mut e: usize = 0;
-//         while e < x["options"].len()
-//         {
-//             let y = x["options"][i].clone();
-//             options.push(Option {
-//                 name: y["name"].to_string(),
-//                 description: y["description"].to_string(),
-//                 kind: y["kind"].to_string(),
-//                 required: y["required"].as_bool().unwrap_or(true),
-//             });
-//             e += 0;
-//         }
-
-//         let command = Command {
-//             name: x["name"].to_string(),
-//             description: x["description"].to_string(),
-//             options,
-//         };
-
-//         commands.push(command);
-//         i += 1;
-//     }
-//     commands
-// }
-
-struct Option
-{
-    name: String,
-    description: String,
-    kind: String,
-    required: bool,
-}
-
-struct Command
-{
-    name: String,
-    description: String,
-    options: Vec<Option>,
-}
-
 pub async fn run(ctx: Context, command: ApplicationCommandInteraction)
 {
     let content = match command.data.name.as_str()
