@@ -8,14 +8,14 @@ use serenity::{
     async_trait,
     model::{
         application::{command::CommandOptionType, interaction::Interaction},
-        gateway::Ready, prelude::command::Command,
+        gateway::Ready, prelude::{command::Command, GuildId},
     },
     prelude::*,
 };
 
 const AUTHOR:&str = "Decator";
 const GITHUB:&str = "https://github.com/El-Wumbus/Bot-of-Justice";
-const VERSION:&str = "0.2.0";
+const VERSION:&str = "0.2.1";
 
 #[tokio::main]
 async fn main()
@@ -59,6 +59,12 @@ impl EventHandler for Handler
         {
             let _ = Command::delete_global_application_command(ctx.clone(), cmd.id).await;
         }
+
+        let server = GuildId(configs::CONFIG.server);
+        for cmd in GuildId::get_application_commands(&server, ctx.clone()).await.unwrap()
+        {
+            let _ = GuildId::delete_application_command(&server, ctx.clone(), cmd.id);
+        };
 
         // I don't know a better way to do this
         Command::set_global_application_commands(
