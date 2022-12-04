@@ -89,7 +89,7 @@ impl EchangeRates
         let save_file = storage_dirs.cache_dir.join("exchange_rates.json");
         if !save_file.exists()
         {
-            crate::pull_api().await;
+            // crate::pull_api().await;
         }
 
         let response = EchangeRateResponse::parse(save_file);

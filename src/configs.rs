@@ -9,15 +9,15 @@ pub struct Config
 {
     pub token: String,
     pub server: u64,
-    pub keys: Keys,
+    // pub keys: Keys,
     pub behavior: Option<Behavior>,
 }
 
-#[derive(Deserialize, Serialize, Clone)]
-pub struct Keys
-{
-    pub exchange_rate_api_key: String
-}
+// #[derive(Deserialize, Serialize, Clone)]
+// pub struct Keys
+// {
+//     pub exchange_rate_api_key: String
+// }
 
 #[derive(Serialize)]
 #[derive(Deserialize)]
@@ -75,7 +75,7 @@ impl Config
             let config = Config {
                 token,
                 server: id,
-                keys: Keys{exchange_rate_api_key: key},
+                // keys: Keys{exchange_rate_api_key: key},
                 behavior: Some(Behavior { max_wiki_output: None }),
             };
 

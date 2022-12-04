@@ -27,11 +27,11 @@ const VERSION: &str = "0.2.3";
 
 // const TWELVE_HOURS: u64 = 43_200;
 
-pub async fn pull_api()
-{
-    let keys =configs::CONFIG.keys.clone();
-    conversions::currency::EchangeRates::from_api(keys.exchange_rate_api_key).await;
-}
+// pub async fn pull_api()
+// {
+//     let keys =configs::CONFIG.keys.clone();
+//     conversions::currency::EchangeRates::from_api(keys.exchange_rate_api_key).await;
+// }
 
 #[tokio::main]
 async fn main()
