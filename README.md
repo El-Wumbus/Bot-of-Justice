@@ -8,3 +8,4 @@ Written in rust.
 * [x] Wiki command
 * [x] `author` - Link the author and stuff
 * [ ] `currency` - Convert to an from currencies
+  * uses `currencyapi.com`

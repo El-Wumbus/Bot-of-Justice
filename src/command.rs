@@ -9,7 +9,7 @@ use serenity::{
 };
 
 use super::extentions::{conversions::temp, wiki::wiki};
-use crate::extentions::meta::{license::*, self};
+use crate::extentions::{meta::{license::*, self}, time};
 use crate::{
     extentions::randomize::random_choice::{coin, roulette},
 };
@@ -118,13 +118,60 @@ pub async fn run(ctx: Context, command: ApplicationCommandInteraction)
         .to_string(),
 
         "info" => meta::info::run(),
+        // "currency" =>
+        // {
+
+        //     let mut input: String = String::new();
+        //     let mut target: String = "".to_string();
+
+        //     if command.data.options.len() < 2
+        //     {
+        //         panic!("Expected User Arguments '[Input] [Target]'")
+        //     }
+        //     let keys = crate::configs::CONFIG.keys.clone();
+        //     let rates = currency::EchangeRates::from_api(keys.exchange_rate_api_key).await;
+
+        //     if let CommandDataOptionValue::String(_value) = command.data.options[0]
+        //         .resolved
+        //         .as_ref()
+        //         .expect("Expected User Object")
+        //     {
+        //         input = _value.clone();
+        //     }
+
+        //     if let CommandDataOptionValue::String(_value) = command.data.options[1]
+        //         .resolved
+        //         .as_ref()
+        //         .expect("Expected User Object")
+        //     {
+        //         target = _value.trim().to_string();
+        //     }
+
+        //     currency::run(input, target, rates)
+        // }
         
+        "timeh" => {
+            let mut value: String = String::new();
+            if command.data.options.len() < 1
+            {
+                panic!("Expected User Arguments '[time]'")
+            }
+
+            if let CommandDataOptionValue::String(_value) = command.data.options[0]
+                .resolved
+                .as_ref()
+                .expect("Expected User Object")
+            {
+                value = _value.clone();
+            }
+            time::timeh::run(value)
+        }
         _ => "not a thing, bozo 🤓.\nL + nerd".to_string(),
     };
 
     if let Err(why) = command
         .create_interaction_response(&ctx.http, |response| {
-            response
+            response 
                 .kind(InteractionResponseType::ChannelMessageWithSource)
                 .interaction_response_data(|message| message.content(content))
         })

@@ -9,14 +9,14 @@ pub struct Config
 {
     pub token: String,
     pub server: u64,
-    pub keys: Option<Keys>,
+    pub keys: Keys,
     pub behavior: Option<Behavior>,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct Keys
 {
-    pub exchange_rate_api_key: Option<String>
+    pub exchange_rate_api_key: String
 }
 
 #[derive(Serialize)]
@@ -66,11 +66,16 @@ impl Config
             stdin().read_line(&mut input).unwrap();
             let token: String = input;
 
+            print!("Enter your exchange rate api key: ");
+            stdout().flush().unwrap();
+            let mut input:String = String::new();
+            stdin().read_line(&mut input).unwrap();
+            let key: String = input;
             
             let config = Config {
                 token,
                 server: id,
-                keys: Some(Keys{exchange_rate_api_key:None}),
+                keys: Keys{exchange_rate_api_key: key},
                 behavior: Some(Behavior { max_wiki_output: None }),
             };
 
