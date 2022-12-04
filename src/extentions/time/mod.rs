@@ -112,7 +112,7 @@ pub mod timeh
                 Ok(x) => x,
                 Err(x) => return format!("Improper input: {x}"),
             };
-            return format!("{}:{}", results[0], results[1]);
+            return format!("{:02}:{:02}", results[0], results[1]);
         }
         else
         {
@@ -132,7 +132,7 @@ pub mod timeh
             {
                 pm = false;
             }
-            return format!("{}:{}{}", results[0], results[1], {
+            return format!("{}:{:02}{}", results[0], results[1], {
                 if pm
                 {
                     "pm"
