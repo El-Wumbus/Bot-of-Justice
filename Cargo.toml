@@ -1,6 +1,6 @@
 [package]
 name = "bot_of_justice"
-version = "0.2.3"
+version = "0.3.0"
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -15,6 +15,7 @@ once_cell  = "1.16.0"
 currency_rs = "1.1.2"
 serde = "1.0.147"
 serde_derive = "1.0.147"
+lazy_static = "1.4.0"
 
 # Extention Dependencies
 truncrate = "0.1.3"

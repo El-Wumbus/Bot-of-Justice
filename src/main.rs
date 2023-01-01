@@ -120,6 +120,7 @@ impl EventHandler for Handler
                     randomize::random_choice::roulette::register(command)
                 })
                 .create_application_command(|command| wiki::wiki::register(command))
+                .create_application_command(|command| simple::echo::register(command))
                 // .create_application_command(|command| currency::register(command))
         })
         .await

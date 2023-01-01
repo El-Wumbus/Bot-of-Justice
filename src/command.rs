@@ -9,9 +9,13 @@ use serenity::{
 };
 
 use super::extentions::{conversions::temp, wiki::wiki};
-use crate::extentions::{meta::{license::*, self}, time};
+use crate::extentions::{
+    meta::{self, license::*},
+    time,
+};
 use crate::{
     extentions::randomize::random_choice::{coin, roulette},
+    simple,
 };
 
 pub async fn run(ctx: Context, command: ApplicationCommandInteraction)
@@ -19,6 +23,23 @@ pub async fn run(ctx: Context, command: ApplicationCommandInteraction)
     let content = match command.data.name.as_str()
     {
         "ping" => "Bot is alive".to_string(),
+        "echo" =>
+        {
+            if command.data.options.len() < 1
+            {
+                panic!("Expected User Arguments '[input]'")
+            }
+
+            let mut value = String::new();
+            if let CommandDataOptionValue::String(_value) = command.data.options[0]
+                .resolved
+                .as_ref()
+                .expect("Expected User Object")
+            {
+                value = _value.clone();
+            }
+            simple::echo::run(value)
+        }
         "id" =>
         {
             let options = command
@@ -98,11 +119,10 @@ pub async fn run(ctx: Context, command: ApplicationCommandInteraction)
 
         "roulette" => roulette::run(),
 
-        "linfo" => if let CommandDataOptionValue::String(_value) =
-            command.data.options[1]
-                .resolved
-                .as_ref()
-                .expect("Expected User Object")
+        "linfo" => if let CommandDataOptionValue::String(_value) = command.data.options[1]
+            .resolved
+            .as_ref()
+            .expect("Expected User Object")
         {
             match _value.to_lowercase().as_str()
             {
@@ -149,8 +169,8 @@ pub async fn run(ctx: Context, command: ApplicationCommandInteraction)
 
         //     currency::run(input, target, rates)
         // }
-        
-        "timeh" => {
+        "timeh" =>
+        {
             let mut value: String = String::new();
             if command.data.options.len() < 1
             {
@@ -171,7 +191,7 @@ pub async fn run(ctx: Context, command: ApplicationCommandInteraction)
 
     if let Err(why) = command
         .create_interaction_response(&ctx.http, |response| {
-            response 
+            response
                 .kind(InteractionResponseType::ChannelMessageWithSource)
                 .interaction_response_data(|message| message.content(content))
         })
