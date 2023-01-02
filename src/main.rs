@@ -23,6 +23,14 @@ const AUTHOR: &str = "Decator";
 const GITHUB: &str = "https://github.com/El-Wumbus/Bot-of-Justice";
 const VERSION: &str = "0.4.0";
 
+async fn fetch_api_keys() {
+    match extentions::conversions::currency::ExchangeRates::fetch().await
+            {
+                Ok(_) => log_info_ln!("Succesfully fetched echange rates api key"),
+                Err(x) => log_error_ln!("Couldn't fetch echange rates api key: {x}"),
+            };
+}
+
 #[tokio::main]
 async fn main()
 {
@@ -32,21 +40,18 @@ async fn main()
     wd_log::show_file_line(false);
 
     log_info_ln!(
-        "Starting BOJ (Bot of Justice) Version {}.\nWritten by {}. See the source code at '{}'",
+        "Starting BOJ (Bot of Justice) Version {}. Written by {}. See the source code at '{}'",
         VERSION, AUTHOR, GITHUB
     );
 
     // Schedule echange rate fetching
+    fetch_api_keys().await;
     let fetch_exchange_rates = every(6)
         .hour()
         .at(0, 0)
         .in_timezone(&Utc)
         .perform(|| async {
-            match extentions::conversions::currency::ExchangeRates::fetch().await
-            {
-                Ok(_) => log_info_ln!("Succesfully fetched echange rates api key"),
-                Err(x) => log_error_ln!("Couldn't fetch echange rates api key: {x}"),
-            };
+            fetch_api_keys().await;
         });
     spawn(fetch_exchange_rates);
 
