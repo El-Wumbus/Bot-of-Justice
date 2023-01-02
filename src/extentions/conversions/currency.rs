@@ -260,6 +260,7 @@ pub fn run(input: String, target: String) -> String
             .trim()
             .to_string();
         input_type = "EUR";
+        println!("{input}");
     }
     else if input.ends_with("cad")
     {
@@ -268,9 +269,12 @@ pub fn run(input: String, target: String) -> String
     }
     else if input.ends_with("rub") || input.ends_with("ruble") || input.ends_with("rubles")
     {
-        input = remove_suffix(remove_suffix(remove_suffix(input.trim(), "rub"), "ruble"), "rubles")
-            .trim()
-            .to_string();
+        input = remove_suffix(
+            remove_suffix(remove_suffix(input.trim(), "rub"), "ruble"),
+            "rubles",
+        )
+        .trim()
+        .to_string();
         input_type = "RUB";
     }
     else if input.ends_with("jpy") || input.ends_with("yen")
