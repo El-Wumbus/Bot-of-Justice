@@ -241,8 +241,7 @@ pub fn run(input: String, target: String) -> String
     {
         input = input
             .trim()
-            .strip_suffix("usd")
-            .unwrap_or(&input)
+            .trim_end_matches("usd")
             .strip_prefix('$')
             .unwrap_or(&input)
             .to_string();
@@ -252,10 +251,8 @@ pub fn run(input: String, target: String) -> String
     {
         input = input
             .trim()
-            .strip_suffix("eur")
-            .unwrap_or(&input)
-            .strip_suffix("euro")
-            .unwrap_or(&input)
+            .trim_end_matches("eur")
+            .trim_end_matches("euro")
             .strip_prefix('€')
             .unwrap_or(&input)
             .trim()
@@ -267,8 +264,7 @@ pub fn run(input: String, target: String) -> String
     {
         input = input
             .trim()
-            .strip_suffix("cad")
-            .unwrap_or(&input)
+            .trim_end_matches("cad")
             .to_string();
         input_type = "CAD";
     }
@@ -276,12 +272,9 @@ pub fn run(input: String, target: String) -> String
     {
         input = input
             .trim()
-            .strip_suffix("rub")
-            .unwrap_or(&input)
-            .strip_suffix("ruble")
-            .unwrap_or(&input)
-            .strip_suffix("rubles")
-            .unwrap_or(&input)
+            .trim_end_matches("rub")
+            .trim_end_matches("ruble")
+            .trim_end_matches("rubles")
             .trim()
             .to_string();
 
@@ -291,10 +284,8 @@ pub fn run(input: String, target: String) -> String
     {
         input = input
             .trim()
-            .strip_suffix("jpy")
-            .unwrap_or(&input)
-            .strip_suffix("yen")
-            .unwrap_or(&input)
+            .trim_end_matches("jpy")
+            .trim_end_matches("yen")
             .trim()
             .to_string();
 
@@ -304,8 +295,7 @@ pub fn run(input: String, target: String) -> String
     {
         input = input
             .trim()
-            .strip_suffix("aud")
-            .unwrap_or(&input)
+            .trim_end_matches("aud")
             .trim()
             .to_string();
 
@@ -315,10 +305,8 @@ pub fn run(input: String, target: String) -> String
     {
         input = input
             .trim()
-            .strip_suffix("aud")
-            .unwrap_or(&input)
-            .strip_suffix("dram")
-            .unwrap_or(&input)
+            .trim_end_matches("aud")
+            .trim_end_matches("dram")
             .trim()
             .to_string();
 
