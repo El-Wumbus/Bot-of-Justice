@@ -245,55 +245,50 @@ pub fn run(input: String, target: String) -> String
     let input_type: &str;
     if input.starts_with('$') || input.ends_with("usd")
     {
-        input = remove_suffix(input.trim(), "usd")
+        input = remove_suffix(&input, "usd")
             .strip_prefix('$')
             .unwrap_or(&input)
-            .trim()
             .to_string();
         input_type = "USD";
     }
     else if input.starts_with('€') || input.ends_with("eur") || input.ends_with("euro")
     {
-        input = remove_suffix(remove_suffix(input.trim(), "eur"), "euro")
+        input = remove_suffix(remove_suffix(&input, "eur"), "euro")
             .strip_prefix('€')
             .unwrap_or(&input)
-            .trim()
             .to_string();
         input_type = "EUR";
         println!("{input}");
     }
     else if input.ends_with("cad")
     {
-        input = remove_suffix(input.trim(), "cad").trim().to_string();
+        input = remove_suffix(&input, "cad").to_string();
         input_type = "CAD";
     }
     else if input.ends_with("rub") || input.ends_with("ruble") || input.ends_with("rubles")
     {
         input = remove_suffix(
-            remove_suffix(remove_suffix(input.trim(), "rub"), "ruble"),
+            remove_suffix(remove_suffix(&input, "rub"), "ruble"),
             "rubles",
         )
-        .trim()
         .to_string();
         input_type = "RUB";
     }
     else if input.ends_with("jpy") || input.ends_with("yen")
     {
-        input = remove_suffix(remove_suffix(input.trim(), "jpy"), "yen")
-            .trim()
+        input = remove_suffix(remove_suffix(&input, "jpy"), "yen")
             .to_string();
 
         input_type = "JPY";
     }
     else if input.ends_with("aud")
     {
-        input = remove_suffix(input.trim(), "aud").trim().to_string();
+        input = remove_suffix(&input, "aud").to_string();
         input_type = "AUD";
     }
     else if input.ends_with("amd") || input.ends_with("dram")
     {
-        input = remove_suffix(remove_suffix(input.trim(), "amd"), "dram")
-            .trim()
+        input = remove_suffix(remove_suffix(&input, "amd"), "dram")
             .to_string();
 
         input_type = "AMD";
