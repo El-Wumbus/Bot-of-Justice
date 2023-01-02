@@ -11,12 +11,14 @@ use serenity::{
 use super::extentions::{conversions::temp, wiki::wiki};
 use crate::extentions::{
     meta::{self, license::*},
-    time,
+    time, self,
 };
 use crate::{
     extentions::randomize::random_choice::{coin, roulette},
     simple,
 };
+use wd_log::{self, log_error_ln};
+
 
 pub async fn run(ctx: Context, command: ApplicationCommandInteraction)
 {
@@ -138,37 +140,35 @@ pub async fn run(ctx: Context, command: ApplicationCommandInteraction)
         .to_string(),
 
         "info" => meta::info::run(),
-        // "currency" =>
-        // {
+        "currency" =>
+        {
 
-        //     let mut input: String = String::new();
-        //     let mut target: String = "".to_string();
+            let mut input: String = String::new();
+            let mut target: String = "".to_string();
 
-        //     if command.data.options.len() < 2
-        //     {
-        //         panic!("Expected User Arguments '[Input] [Target]'")
-        //     }
-        //     let keys = crate::configs::CONFIG.keys.clone();
-        //     let rates = currency::EchangeRates::from_api(keys.exchange_rate_api_key).await;
+            if command.data.options.len() < 2
+            {
+                panic!("Expected User Arguments '[Input] [Target]'")
+            }
 
-        //     if let CommandDataOptionValue::String(_value) = command.data.options[0]
-        //         .resolved
-        //         .as_ref()
-        //         .expect("Expected User Object")
-        //     {
-        //         input = _value.clone();
-        //     }
+            if let CommandDataOptionValue::String(_value) = command.data.options[0]
+                .resolved
+                .as_ref()
+                .expect("Expected User Object")
+            {
+                input = _value.clone();
+            }
 
-        //     if let CommandDataOptionValue::String(_value) = command.data.options[1]
-        //         .resolved
-        //         .as_ref()
-        //         .expect("Expected User Object")
-        //     {
-        //         target = _value.trim().to_string();
-        //     }
+            if let CommandDataOptionValue::String(_value) = command.data.options[1]
+                .resolved
+                .as_ref()
+                .expect("Expected User Object")
+            {
+                target = _value.trim().to_string();
+            }
 
-        //     currency::run(input, target, rates)
-        // }
+            extentions::conversions::currency::run(input, target)
+        }
         "timeh" =>
         {
             let mut value: String = String::new();
@@ -197,6 +197,6 @@ pub async fn run(ctx: Context, command: ApplicationCommandInteraction)
         })
         .await
     {
-        println!("Cannot respond to slash command: {}", why);
+        log_error_ln!("Cannot respond to slash command: {}", why);
     }
 }

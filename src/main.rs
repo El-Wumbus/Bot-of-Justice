@@ -3,6 +3,7 @@ mod command;
 mod configs;
 mod extentions;
 
+use chrono::Utc;
 use extentions::*;
 use serenity::{
     async_trait,
@@ -13,33 +14,41 @@ use serenity::{
     },
     prelude::*,
 };
+use tokio::spawn;
+use tokio_schedule::{every, Job};
+use wd_log::{self, log_info_ln, log_error_ln};
 
-// use std::{
-//     thread,
-//     time::{Duration, Instant},
-// };
-
-// use crate::extentions::conversions::currency;
 
 const AUTHOR: &str = "Decator";
 const GITHUB: &str = "https://github.com/El-Wumbus/Bot-of-Justice";
-const VERSION: &str = "0.2.3";
-
-// const TWELVE_HOURS: u64 = 43_200;
-
-// pub async fn pull_api()
-// {
-//     let keys =configs::CONFIG.keys.clone();
-//     conversions::currency::EchangeRates::from_api(keys.exchange_rate_api_key).await;
-// }
+const VERSION: &str = "0.4.0";
 
 #[tokio::main]
 async fn main()
 {
-    println!(
+    wd_log::set_level(wd_log::INFO);
+    wd_log::set_prefix("BOJ_LOG");
+    wd_log::show_time(true);
+    wd_log::show_file_line(false);
+
+    log_info_ln!(
         "Starting BOJ (Bot of Justice) Version {}.\nWritten by {}. See the source code at '{}'",
         VERSION, AUTHOR, GITHUB
     );
+
+    // Schedule echange rate fetching
+    let fetch_exchange_rates = every(6)
+        .hour()
+        .at(0, 0)
+        .in_timezone(&Utc)
+        .perform(|| async {
+            match extentions::conversions::currency::ExchangeRates::fetch().await
+            {
+                Ok(_) => log_info_ln!("Succesfully fetched echange rates api key"),
+                Err(x) => log_error_ln!("Couldn't fetch echange rates api key: {x}"),
+            };
+        });
+    spawn(fetch_exchange_rates);
 
     // Build client.
     let mut client = Client::builder(
@@ -53,7 +62,7 @@ async fn main()
     // Finally, start up, print error if something went horrendously awry
     if let Err(why) = client.start().await
     {
-        eprintln!("Error: {:?}", why);
+        log_error_ln!("Error: {:?}", why);
     }
 }
 
@@ -72,7 +81,7 @@ impl EventHandler for Handler
 
     async fn ready(&self, ctx: Context, ready: Ready)
     {
-        println!("{} is connected!", ready.user.name);
+        log_info_ln!("{} is connected!", ready.user.name);
 
         for cmd in Command::get_global_application_commands(ctx.clone())
             .await
@@ -121,7 +130,7 @@ impl EventHandler for Handler
                 })
                 .create_application_command(|command| wiki::wiki::register(command))
                 .create_application_command(|command| simple::echo::register(command))
-                // .create_application_command(|command| currency::register(command))
+                .create_application_command(|command| conversions::currency::register(command))
         })
         .await
         .unwrap();

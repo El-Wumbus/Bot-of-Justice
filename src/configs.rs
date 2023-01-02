@@ -7,6 +7,7 @@ use std::{
     io::{stdin, stdout, Write},
     path::PathBuf,
 };
+
 pub static CONFIG: once_cell::sync::Lazy<Config> = Lazy::new(|| Config::parse());
 pub static BLOCKLIST: once_cell::sync::Lazy<crate::extentions::simple::echo::Wordlist> =
     Lazy::new(|| parse_restricted_words());
@@ -18,15 +19,15 @@ pub struct Config
 {
     pub token: String,
     pub server: u64,
-    // pub keys: Keys,
+    pub keys: Keys,
     pub behavior: Option<Behavior>,
 }
 
-// #[derive(Deserialize, Serialize, Clone)]
-// pub struct Keys
-// {
-//     pub exchange_rate_api_key: String
-// }
+#[derive(Deserialize, Serialize, Clone)]
+pub struct Keys
+{
+    pub exchange_rate_api_key: String
+}
 
 #[derive(Deserialize, Serialize)]
 pub struct Behavior
@@ -81,12 +82,12 @@ impl Config
             stdout().flush().unwrap();
             let mut input: String = String::new();
             stdin().read_line(&mut input).unwrap();
-            let _key: String = input;
+            let key: String = input;
 
             let config = Config {
                 token,
                 server: id,
-                // keys: Keys{exchange_rate_api_key: key},
+                keys: Keys{exchange_rate_api_key: key},
                 behavior: Some(Behavior {
                     max_wiki_output: None,
                 }),
@@ -154,7 +155,7 @@ fn parse_restricted_words() -> crate::extentions::simple::echo::Wordlist
 
             fs::create_dir_all(config_file.parent().unwrap()).unwrap();
             // Write the toml to the config file
-            write(config_file.clone(), toml).unwrap();
+            fs::write(config_file.clone(), toml).unwrap();
             return blocklist;
         }
 

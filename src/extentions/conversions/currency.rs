@@ -1,59 +1,31 @@
-use platform_dirs::AppDirs;
 use serde::{Deserialize, Serialize};
-use serenity::{model::prelude::{command::CommandOptionType}, builder::CreateApplicationCommand};
+use serenity::{builder::CreateApplicationCommand, model::prelude::command::CommandOptionType};
 use std::{
-    fs::{read_to_string, File},
-    io::Write,
+    fs,
     path::PathBuf,
 };
 
-#[derive(Serialize, Deserialize)]
-struct EchangeRateResponse
+const ECHANGE_RATE_FILE: &str = "/var/cache/boj/echange_rates.json";
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct ExchangeRates
 {
-    meta: EchangeRateResponseMeta,
-    data: EchangeRateResponseData,
+    meta: ExchangeRateResponseMeta,
+    data: ExchangeRateResponseData,
 }
 
-impl EchangeRateResponse
+#[derive(Serialize, Deserialize, Clone)]
+
+struct ExchangeRateResponseData
 {
-    async fn fetch(api_key: String) -> PathBuf
-    {
-        let url = format!(
-            "https://api.currencyapi.com/v3/latest?apikey={}&currencies=EUR%2CUSD%2CCAD%2CBTC",
-            api_key
-        );
-        let storage_dirs = AppDirs::new(Some("boj"), false).unwrap();
-        dbg!(&storage_dirs);
-        let cache_dir = storage_dirs.cache_dir;
-        let save_file = cache_dir.join("exchange_rates.json");
-        let resp = reqwest::get(url).await.unwrap();
-
-        let mut f = File::create(save_file.clone()).unwrap();
-        f.write_all(&resp.bytes().await.unwrap()).unwrap();
-        f.flush().unwrap();
-        save_file
-    }
-
-    fn parse(path: PathBuf) -> EchangeRateResponse
-    {
-        let data = &*read_to_string(path).unwrap();
-        let exchange: EchangeRateResponse = serde_json::from_str(data).unwrap();
-        exchange
-    }
+    BTC: ExchangeRateResponseDataInfo,
+    CAD: ExchangeRateResponseDataInfo,
+    EUR: ExchangeRateResponseDataInfo,
+    USD: ExchangeRateResponseDataInfo,
 }
 
-#[derive(Serialize, Deserialize)]
-
-struct EchangeRateResponseData
-{
-    BTC: EchangeRateResponseDataInfo,
-    CAD: EchangeRateResponseDataInfo,
-    EUR: EchangeRateResponseDataInfo,
-    USD: EchangeRateResponseDataInfo,
-}
-
-#[derive(Serialize, Deserialize)]
-struct EchangeRateResponseMeta
+#[derive(Serialize, Deserialize, Clone)]
+struct ExchangeRateResponseMeta
 {
     last_updated_at: String,
 }
@@ -61,56 +33,111 @@ struct EchangeRateResponseMeta
 // Echange rates are floating point numbers that represent
 // value relative to USD. USD will always be 1.0
 
-#[derive(Clone)]
-pub struct EchangeRates
-{
-    pub BTC: f64,
-    pub CAD: f64,
-    pub EUR: f64,
-    pub USD: f64,
-}
-
-impl EchangeRates
-{
-    pub async fn from_api(api_key: String) -> EchangeRates
-    {
-        let response = EchangeRateResponse::parse(EchangeRateResponse::fetch(api_key).await);
-        EchangeRates {
-            BTC: response.data.BTC.value,
-            CAD: response.data.CAD.value,
-            EUR: response.data.EUR.value,
-            USD: response.data.USD.value,
-        }
-    }
-
-    pub async fn from_saved() -> EchangeRates
-    {
-        let storage_dirs = AppDirs::new(Some("boj"), false).unwrap();
-        let save_file = storage_dirs.cache_dir.join("exchange_rates.json");
-        if !save_file.exists()
-        {
-            // crate::pull_api().await;
-        }
-
-        let response = EchangeRateResponse::parse(save_file);
-        EchangeRates {
-            BTC: response.data.BTC.value,
-            CAD: response.data.CAD.value,
-            EUR: response.data.EUR.value,
-            USD: response.data.USD.value,
-        }
-
-    }
-}
-
-#[derive(Serialize, Deserialize)]
-struct EchangeRateResponseDataInfo
+#[derive(Serialize, Deserialize, Clone)]
+struct ExchangeRateResponseDataInfo
 {
     code: String,
     value: f64,
 }
 
-pub enum Currency
+impl ExchangeRates
+{
+    /// Makes an http reqest using the api_key and saves this JSON
+    /// data to `ECHANGE_RATE_FILE`
+    pub async fn fetch() -> Result<(), String>
+    {
+        // Get the api_key
+        let api_key = crate::configs::CONFIG.keys.exchange_rate_api_key.clone();
+
+
+        // Construct request URL
+        let url = format!(
+            "https://api.currencyapi.com/v3/latest?apikey={}&currencies=EUR%2CUSD%2CCAD%2CBTC",
+            api_key
+        );
+
+        // Get the response
+        let resp = reqwest::get(url).await.unwrap();
+
+        let pfile = PathBuf::from(ECHANGE_RATE_FILE);
+
+        // If the parent directory of the file doesn't exit, we create
+        // it.
+        if !pfile.parent().unwrap().exists()
+        {
+            match fs::create_dir_all(pfile.parent().unwrap())
+            {
+                Ok(_) => (),
+                Err(x) =>
+                {
+                    return Err(format!(
+                        "Couldn't create the parent directory '{}': {} ",
+                        pfile.parent().unwrap().display(),
+                        x
+                    ))
+                }
+            }
+        }
+
+        // Write the data to a predetermined file
+        match fs::write(
+            pfile.clone(),
+            &match resp.bytes().await
+            {
+                Ok(x) => x,
+                Err(x) => return Err(format!("Couldn't get response as bytes: {}", x)),
+            },
+        )
+        {
+            Ok(_) => (),
+            Err(x) =>
+            {
+                return Err(format!(
+                    "Couldn't save reponse to '{}': {}",
+                    pfile.display(),
+                    x
+                ))
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Reads and parses data from `ECHANGE_RATE_FILE`
+    fn read() -> Result<ExchangeRates, String>
+    {
+        let pfile = PathBuf::from(ECHANGE_RATE_FILE);
+
+        if !pfile.exists()
+        {
+            return Err(format!(
+                "Couldn't read from '{}': '{}' Doesn't exist. Fetch it first.",
+                pfile.display(),
+                pfile.display()
+            ));
+        }
+
+        let file_contents = match fs::read_to_string(pfile.clone())
+        {
+            Ok(x) => x,
+            Err(x) => return Err(format!("Couldn't read from '{}': {}", pfile.display(), x)),
+        };
+
+        // Parse json from cached file
+        match serenity::json::prelude::from_str(&file_contents)
+        {
+            Ok(x) => Ok(x),
+            Err(x) => Err(format!(
+                "Couldn't parse json from '{}': {}",
+                pfile.display(),
+                x
+            )),
+        }
+    }
+
+}
+
+enum Currency
 {
     BTC(f64),
     CAD(f64),
@@ -118,6 +145,36 @@ pub enum Currency
     USD(f64),
 }
 
+impl Currency
+{
+    fn to_usd(self, rates: ExchangeRates) -> Currency
+    {
+        match self
+        {
+            Self::BTC(x) => Currency::USD(rates.data.BTC.value * x),
+            Self::CAD(x) => Currency::USD(rates.data.CAD.value * x),
+            Self::EUR(x) => Currency::USD(rates.data.EUR.value * x),
+            _ => self,
+        }
+    }
+
+    fn to_btc(self, rates: ExchangeRates) -> Currency
+    {
+        Self::BTC(f64::from(self.to_usd(rates.clone())) / rates.data.BTC.value)
+    }
+
+    fn to_eur(self, rates: ExchangeRates) -> Currency
+    {
+        Self::EUR(f64::from(self.to_usd(rates.clone())) / rates.data.EUR.value)
+    }
+
+    fn to_cad(self, rates: ExchangeRates) -> Currency
+    {
+        Self::CAD(f64::from(self.to_usd(rates.clone())) / rates.data.CAD.value)
+    }
+}
+
+// Allow easy converting to f64
 impl From<Currency> for f64
 {
     fn from(item: Currency) -> Self
@@ -132,39 +189,19 @@ impl From<Currency> for f64
     }
 }
 
-impl Currency
+pub fn run(input: String, target: String) -> String
 {
-    pub fn to_usd(self, rates: EchangeRates) -> Currency
+    let rates = match ExchangeRates::read()
     {
-        match self
-        {
-            Self::BTC(x) => Currency::USD(rates.BTC * x),
-            Self::CAD(x) => Currency::USD(rates.CAD * x),
-            Self::EUR(x) => Currency::USD(rates.EUR * x),
-            _ => self,
-        }
-    }
+        Ok(x) => x,
+        Err(x) => return format!("Error: {}", x),
+    };
 
-    pub fn to_btc(self, rates: EchangeRates) -> Currency
-    {
-        Self::BTC(f64::from(self.to_usd(rates.clone())) / rates.BTC.clone())
-    }
-
-    pub fn to_eur(self, rates: EchangeRates) -> Currency
-    {
-        Self::EUR(f64::from(self.to_usd(rates.clone())) / rates.EUR.clone())
-    }
-
-    pub fn to_cad(self, rates: EchangeRates) -> Currency
-    {
-        Self::CAD(f64::from(self.to_usd(rates.clone())) / rates.CAD.clone())
-    }
-}
-
-pub fn run(input: String, target: String, rates:EchangeRates) -> String
-{
+    // Get the input and target values as lowercase
     let mut input = input.to_lowercase();
     let target = target.to_lowercase();
+
+    // Determine the input currency
     let input_type: &str;
     if input.starts_with('$') || input.ends_with("usd")
     {
@@ -209,20 +246,32 @@ pub fn run(input: String, target: String, rates:EchangeRates) -> String
             .to_string();
         input_type = "CAD";
     }
-    else {
+    else
+    {
         return "Error: Invalid input currency".to_string();
     }
-    let parsed = input.parse().unwrap_or(0.0);
+    
+
+    // Try to parse the currency
+    let parsed = match input.parse()
+    {
+        Ok(x) => x,
+        Err(x) => return format!("Error: {}", x),
+    };
+
+    // Store everything in the appropriate `Currency` variant
     let input_currency = match input_type
     {
         "BTC" => Currency::BTC(parsed),
         "USD" => Currency::USD(parsed),
         "EUR" => Currency::EUR(parsed),
         "CAD" => Currency::CAD(parsed),
-        &_=> return "Error: Invalid input currency".to_string(),
+        &_ => return "Error: Invalid input currency".to_string(),
     };
 
-    let result = match &*target {
+    // Convert each currency based upon the target currency
+    let result = match &*target
+    {
         "usd" => input_currency.to_usd(rates),
         "cad" => input_currency.to_cad(rates),
         "btc" => input_currency.to_btc(rates),
@@ -230,9 +279,9 @@ pub fn run(input: String, target: String, rates:EchangeRates) -> String
         _ => return "Error: Invalid target".to_string(),
     };
 
+    // Return the formatted result
     format!("{:.1}{}", f64::from(result), target)
 }
-
 
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand
 {
