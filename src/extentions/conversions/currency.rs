@@ -1,9 +1,6 @@
 use serde::{Deserialize, Serialize};
 use serenity::{builder::CreateApplicationCommand, model::prelude::command::CommandOptionType};
-use std::{
-    fs,
-    path::PathBuf,
-};
+use std::{fs, path::PathBuf};
 
 const ECHANGE_RATE_FILE: &str = "/var/cache/boj/echange_rates.json";
 
@@ -58,7 +55,6 @@ impl ExchangeRates
     {
         // Get the api_key
         let api_key = crate::configs::CONFIG.keys.exchange_rate_api_key.clone();
-
 
         // Construct request URL
         let url = format!(
@@ -144,7 +140,6 @@ impl ExchangeRates
             )),
         }
     }
-
 }
 
 enum Currency
@@ -202,7 +197,6 @@ impl Currency
     {
         Self::AMD(f64::from(self.to_usd(rates.clone())) * rates.data.AMD.value)
     }
-
 }
 
 // Allow easy converting to f64
@@ -223,6 +217,18 @@ impl From<Currency> for f64
     }
 }
 
+fn remove_suffix<'a>(s: &'a str, p: &str) -> &'a str
+{
+    if s.ends_with(p)
+    {
+        &s[..s.len() - p.len()]
+    }
+    else
+    {
+        s
+    }
+}
+
 pub fn run(input: String, target: String) -> String
 {
     let rates = match ExchangeRates::read()
@@ -239,53 +245,37 @@ pub fn run(input: String, target: String) -> String
     let input_type: &str;
     if input.starts_with('$') || input.ends_with("usd")
     {
-        input = input
-            .trim()
-            .trim_end_matches("usd")
+        input = remove_suffix(input.trim(), "usd")
             .strip_prefix('$')
             .unwrap_or(&input)
+            .trim()
             .to_string();
         input_type = "USD";
     }
     else if input.starts_with('€') || input.ends_with("eur") || input.ends_with("euro")
     {
-        input = input
-            .trim()
-            .trim_end_matches("eur")
-            .trim_end_matches("euro")
+        input = remove_suffix(remove_suffix(input.trim(), "eur"), "euro")
             .strip_prefix('€')
             .unwrap_or(&input)
             .trim()
             .to_string();
-
         input_type = "EUR";
     }
     else if input.ends_with("cad")
     {
-        input = input
-            .trim()
-            .trim_end_matches("cad")
-            .to_string();
+        input = remove_suffix(input.trim(), "cad").trim().to_string();
         input_type = "CAD";
     }
     else if input.ends_with("rub") || input.ends_with("ruble") || input.ends_with("rubles")
     {
-        input = input
-            .trim()
-            .trim_end_matches("rub")
-            .trim_end_matches("ruble")
-            .trim_end_matches("rubles")
+        input = remove_suffix(remove_suffix(remove_suffix(input.trim(), "rub"), "ruble"), "rubles")
             .trim()
             .to_string();
-
         input_type = "RUB";
     }
     else if input.ends_with("jpy") || input.ends_with("yen")
     {
-        input = input
-            .trim()
-            .trim_end_matches("jpy")
-            .trim_end_matches("yen")
+        input = remove_suffix(remove_suffix(input.trim(), "jpy"), "yen")
             .trim()
             .to_string();
 
@@ -293,20 +283,12 @@ pub fn run(input: String, target: String) -> String
     }
     else if input.ends_with("aud")
     {
-        input = input
-            .trim()
-            .trim_end_matches("aud")
-            .trim()
-            .to_string();
-
+        input = remove_suffix(input.trim(), "aud").trim().to_string();
         input_type = "AUD";
     }
     else if input.ends_with("amd") || input.ends_with("dram")
     {
-        input = input
-            .trim()
-            .trim_end_matches("aud")
-            .trim_end_matches("dram")
+        input = remove_suffix(remove_suffix(input.trim(), "amd"), "dram")
             .trim()
             .to_string();
 
@@ -316,7 +298,6 @@ pub fn run(input: String, target: String) -> String
     {
         return "Error: Invalid input currency".to_string();
     }
-    
 
     // Try to parse the currency
     let parsed = match input.parse()
@@ -352,14 +333,16 @@ pub fn run(input: String, target: String) -> String
     };
 
     // Return the formatted result
-    format!("{:.1}{}", f64::from(result), target)
+    format!("{:.2}{}", f64::from(result), target)
 }
 
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand
 {
     command
         .name("currency")
-        .description("Convert from one Currency to another. Supports USD, CAD, EUR, YEN, RUB, AUD, and AMD")
+        .description(
+            "Convert from one Currency to another. Supports USD, CAD, EUR, YEN, RUB, AUD, and AMD",
+        )
         .create_option(|option| {
             option
                 .name("value")
