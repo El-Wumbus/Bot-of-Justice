@@ -18,10 +18,20 @@ pub struct ExchangeRates
 
 struct ExchangeRateResponseData
 {
-    BTC: ExchangeRateResponseDataInfo,
-    CAD: ExchangeRateResponseDataInfo,
+    // Euro
     EUR: ExchangeRateResponseDataInfo,
+    /// U.S. Dollar
     USD: ExchangeRateResponseDataInfo,
+    /// Canadian Dollar
+    CAD: ExchangeRateResponseDataInfo,
+    /// Russian Ruble
+    RUB: ExchangeRateResponseDataInfo,
+    /// YEN
+    JPY: ExchangeRateResponseDataInfo,
+    /// Austrialian Dollar
+    AUD: ExchangeRateResponseDataInfo,
+    /// Armenian Dram
+    AMD: ExchangeRateResponseDataInfo,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -52,7 +62,7 @@ impl ExchangeRates
 
         // Construct request URL
         let url = format!(
-            "https://api.currencyapi.com/v3/latest?apikey={}&currencies=EUR%2CUSD%2CCAD%2CBTC",
+            "https://api.currencyapi.com/v3/latest?apikey={}&currencies=EUR%2CUSD%2CCAD%2CRUB%2CJPY%2CAUD%2CAMD",
             api_key
         );
 
@@ -139,39 +149,60 @@ impl ExchangeRates
 
 enum Currency
 {
-    BTC(f64),
-    CAD(f64),
     EUR(f64),
     USD(f64),
+    CAD(f64),
+    RUB(f64),
+    JPY(f64),
+    AUD(f64),
+    AMD(f64),
 }
 
 impl Currency
 {
-    fn to_usd(self, rates: ExchangeRates) -> Currency
-    {
-        match self
-        {
-            Self::BTC(x) => Currency::USD(rates.data.BTC.value * x),
-            Self::CAD(x) => Currency::USD(rates.data.CAD.value * x),
-            Self::EUR(x) => Currency::USD(rates.data.EUR.value * x),
-            _ => self,
-        }
-    }
-
-    fn to_btc(self, rates: ExchangeRates) -> Currency
-    {
-        Self::BTC(f64::from(self.to_usd(rates.clone())) / rates.data.BTC.value)
-    }
-
     fn to_eur(self, rates: ExchangeRates) -> Currency
     {
-        Self::EUR(f64::from(self.to_usd(rates.clone())) / rates.data.EUR.value)
+        Self::EUR(f64::from(self.to_usd(rates.clone())) * rates.data.EUR.value)
+    }
+
+    fn to_usd(self, rates: ExchangeRates) -> Currency
+    {
+        // We convert each currency to USD by dividing it by it's exchange rate
+        // based on USD
+        match self
+        {
+            Self::EUR(x) => Currency::USD(rates.data.EUR.value / x),
+            Self::USD(_) => self,
+            Self::CAD(x) => Currency::USD(rates.data.CAD.value / x),
+            Self::RUB(x) => Currency::USD(rates.data.RUB.value / x),
+            Self::JPY(x) => Currency::USD(rates.data.JPY.value / x),
+            Self::AUD(x) => Currency::USD(rates.data.AUD.value / x),
+            Self::AMD(x) => Currency::USD(rates.data.AUD.value / x),
+        }
     }
 
     fn to_cad(self, rates: ExchangeRates) -> Currency
     {
-        Self::CAD(f64::from(self.to_usd(rates.clone())) / rates.data.CAD.value)
+        Self::CAD(f64::from(self.to_usd(rates.clone())) * rates.data.CAD.value)
     }
+
+    fn to_rub(self, rates: ExchangeRates) -> Currency
+    {
+        Self::RUB(f64::from(self.to_usd(rates.clone())) * rates.data.RUB.value)
+    }
+    fn to_jpy(self, rates: ExchangeRates) -> Currency
+    {
+        Self::JPY(f64::from(self.to_usd(rates.clone())) * rates.data.JPY.value)
+    }
+    fn to_aud(self, rates: ExchangeRates) -> Currency
+    {
+        Self::AUD(f64::from(self.to_usd(rates.clone())) * rates.data.AUD.value)
+    }
+    fn to_amd(self, rates: ExchangeRates) -> Currency
+    {
+        Self::AMD(f64::from(self.to_usd(rates.clone())) * rates.data.AMD.value)
+    }
+
 }
 
 // Allow easy converting to f64
@@ -181,10 +212,13 @@ impl From<Currency> for f64
     {
         match item
         {
-            Currency::BTC(x) => x,
-            Currency::CAD(x) => x,
             Currency::EUR(x) => x,
             Currency::USD(x) => x,
+            Currency::CAD(x) => x,
+            Currency::RUB(x) => x,
+            Currency::JPY(x) => x,
+            Currency::AUD(x) => x,
+            Currency::AMD(x) => x,
         }
     }
 }
@@ -214,25 +248,17 @@ pub fn run(input: String, target: String) -> String
             .to_string();
         input_type = "USD";
     }
-    else if input.starts_with('₿') || input.ends_with("btc")
-    {
-        input = input
-            .trim()
-            .strip_suffix("btc")
-            .unwrap_or(&input)
-            .strip_prefix('₿')
-            .unwrap_or(&input)
-            .to_string();
-        input_type = "BTC";
-    }
-    else if input.starts_with('€') || input.ends_with("eur")
+    else if input.starts_with('€') || input.ends_with("eur") || input.ends_with("euro")
     {
         input = input
             .trim()
             .strip_suffix("eur")
             .unwrap_or(&input)
+            .strip_suffix("euro")
+            .unwrap_or(&input)
             .strip_prefix('€')
             .unwrap_or(&input)
+            .trim()
             .to_string();
 
         input_type = "EUR";
@@ -246,6 +272,58 @@ pub fn run(input: String, target: String) -> String
             .to_string();
         input_type = "CAD";
     }
+    else if input.ends_with("rub") || input.ends_with("ruble") || input.ends_with("rubles")
+    {
+        input = input
+            .trim()
+            .strip_suffix("rub")
+            .unwrap_or(&input)
+            .strip_suffix("ruble")
+            .unwrap_or(&input)
+            .strip_suffix("rubles")
+            .unwrap_or(&input)
+            .trim()
+            .to_string();
+
+        input_type = "RUB";
+    }
+    else if input.ends_with("jpy") || input.ends_with("yen")
+    {
+        input = input
+            .trim()
+            .strip_suffix("jpy")
+            .unwrap_or(&input)
+            .strip_suffix("yen")
+            .unwrap_or(&input)
+            .trim()
+            .to_string();
+
+        input_type = "JPY";
+    }
+    else if input.ends_with("aud")
+    {
+        input = input
+            .trim()
+            .strip_suffix("aud")
+            .unwrap_or(&input)
+            .trim()
+            .to_string();
+
+        input_type = "AUD";
+    }
+    else if input.ends_with("amd") || input.ends_with("dram")
+    {
+        input = input
+            .trim()
+            .strip_suffix("aud")
+            .unwrap_or(&input)
+            .strip_suffix("dram")
+            .unwrap_or(&input)
+            .trim()
+            .to_string();
+
+        input_type = "AMD";
+    }
     else
     {
         return "Error: Invalid input currency".to_string();
@@ -256,27 +334,33 @@ pub fn run(input: String, target: String) -> String
     let parsed = match input.parse()
     {
         Ok(x) => x,
-        Err(x) => return format!("Error: {}", x),
+        Err(x) => return format!("Error: {}: '{}'", x, input),
     };
 
     // Store everything in the appropriate `Currency` variant
     let input_currency = match input_type
     {
-        "BTC" => Currency::BTC(parsed),
-        "USD" => Currency::USD(parsed),
         "EUR" => Currency::EUR(parsed),
+        "USD" => Currency::USD(parsed),
         "CAD" => Currency::CAD(parsed),
-        &_ => return "Error: Invalid input currency".to_string(),
+        "RUB" => Currency::RUB(parsed),
+        "JPY" => Currency::JPY(parsed),
+        "AUD" => Currency::AUD(parsed),
+        "AMD" => Currency::AMD(parsed),
+        &_ => return format!("Error: Invalid input currency type: '{input_type}'"),
     };
 
     // Convert each currency based upon the target currency
     let result = match &*target
     {
-        "usd" => input_currency.to_usd(rates),
+        "eur" | "euro" => input_currency.to_eur(rates),
+        "usd" | "dollar" => input_currency.to_usd(rates),
         "cad" => input_currency.to_cad(rates),
-        "btc" => input_currency.to_btc(rates),
-        "eur" => input_currency.to_eur(rates),
-        _ => return "Error: Invalid target".to_string(),
+        "rub" | "ruble" => input_currency.to_rub(rates),
+        "jpy" | "yen" => input_currency.to_jpy(rates),
+        "aud" => input_currency.to_aud(rates),
+        "amd" | "dram" => input_currency.to_amd(rates),
+        _ => return format!("Error: Invalid target: '{target}'"),
     };
 
     // Return the formatted result
@@ -287,18 +371,18 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
 {
     command
         .name("currency")
-        .description("Convert from one Currency to another. Supports USD, CAD, EUR, and BTC")
+        .description("Convert from one Currency to another. Supports USD, CAD, EUR, YEN, RUB, AUD, and AMD")
         .create_option(|option| {
             option
                 .name("value")
-                .description("Original value (e.g. '$45' [USD], '18.33 CAD' [CAD].")
+                .description("Original value (e.g. '$45' [USD], '18.33 AMD' [Armenian Dram].")
                 .kind(CommandOptionType::String)
                 .required(true)
         })
         .create_option(|option| {
             option
                 .name("target")
-                .description("The currency to target. (e.g 'EUR' [Euro], 'BTC' [Bitcoin]).")
+                .description("The currency to target. (e.g 'EUR' [Euro], 'CAD' [Canadian Dollar]).")
                 .kind(CommandOptionType::String)
                 .required(true)
         })
