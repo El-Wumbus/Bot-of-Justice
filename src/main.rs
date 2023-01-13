@@ -14,14 +14,25 @@ use serenity::{
     },
     prelude::*,
 };
+
 use tokio::spawn;
 use tokio_schedule::{every, Job};
 use wd_log::{self, log_info_ln, log_error_ln};
-
+use lazy_static::lazy_static;
 
 const AUTHOR: &str = "Decator";
 const GITHUB: &str = "https://github.com/El-Wumbus/Bot-of-Justice";
 const VERSION: &str = "0.4.0";
+
+lazy_static! {
+    static ref LOGFILE: PathBuf = {
+        let localtime: DateTime<Local> = Local::now();
+        PathBuf::from("/tmp/boj").join(
+            format!("logfile_{}.log", localtime.format("%Y-%m-%d-%H:%M:%S"))
+        )
+    }
+
+}
 
 async fn fetch_api_keys() {
     match extentions::conversions::currency::ExchangeRates::fetch().await
@@ -38,6 +49,15 @@ async fn main()
     wd_log::set_prefix("BOJ_LOG");
     wd_log::show_time(true);
     wd_log::show_file_line(false);
+
+    let log_to_file = match configs::CONFIG.behavior
+    {
+        Some(x) => if match x.log_to_file{
+
+        },
+        _() => false,
+    }
+    wd_log::output_to_file(LOGFILE)
 
     log_info_ln!(
         "Starting BOJ (Bot of Justice) Version {}. Written by {}. See the source code at '{}'",
@@ -68,6 +88,8 @@ async fn main()
     if let Err(why) = client.start().await
     {
         log_error_ln!("Error: {:?}", why);
+        log_to_file("Error")
+        
     }
 }
 

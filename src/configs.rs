@@ -14,25 +14,36 @@ pub static BLOCKLIST: once_cell::sync::Lazy<crate::extentions::simple::echo::Wor
 const BLOCKED_WORDS_FILE: &str = "/etc/boj/blocked-words.json";
 const MAIN_CONFIG_FILE: &str = "/etc/boj/config.toml";
 
-#[derive(Deserialize, Serialize)]
-pub struct Config
-{
-    pub token: String,
-    pub server: u64,
-    pub keys: Keys,
-    pub behavior: Option<Behavior>,
-}
+structstruck::strike! {
+    #[strikethrough[derive(Deserialize, Serialize)]]
+    #[strikethrough[serde(rename_all = "camelCase")]]
+    pub struct Config
+    {
+        /// The discord application token.
+        pub token: String,
 
-#[derive(Deserialize, Serialize, Clone)]
-pub struct Keys
-{
-    pub exchange_rate_api_key: String
+        /// The discord server's ID
+        pub server: u64,
+
+        /// API keys used in the program for some functions
+        pub keys: struct
+        {
+            pub exchange_rate_api_key: String,
+        },
+
+        /// Optional configurable behavior for the bot.
+        pub behavior: Option<Behavior>,
+    }
 }
 
 #[derive(Deserialize, Serialize)]
 pub struct Behavior
 {
+    /// The maximum number of characters allowed for wiki output
     pub max_wiki_output: Option<usize>,
+
+    /// Defines if the log output should be saved to a file
+    pub log_to_file: Option<bool>,
 }
 
 impl Config

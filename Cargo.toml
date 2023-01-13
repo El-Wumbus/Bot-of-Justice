@@ -19,6 +19,7 @@ lazy_static = "1.4"
 tokio_schedule = "0.3"
 chrono = "0.4"
 wd_log = "0.1" # logging
+structstruck = "*"
 
 # Extention Dependencies
 truncrate = "0.1"
